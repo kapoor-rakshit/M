@@ -1,0 +1,334 @@
+MongoDB Shell Methods demonstrated during the Webex sessions
+============================================================
+> use mydb  (creating a new database OR switching from one database to another database)
+> db  --> displays the current Database
+> show dbs  --> displays the list of databases available
+
+> db.createCollection("myColl") --> Creates a collection
+
+Insert functions
+================
+> db.myColl.insert({num:10}) --> Inserts a document in the collection "myColl"
+> db.myColl.find()  --> Fetches all the documents present in the collection "myColl"
+
+Second time inserting 10, but _id field will be different.
+> db.myColl.insert({num:10}) --> Inserts a document in the collection "myColl"
+
+Explicitly assigning _id field
+> db.myColl.insert({_id: 1, num: 20})
+
+Try assigning the same value to _id field => gives duplicate key error index
+> db.myColl.insert({_id: 1, num: 30})
+
+Try assigning different value for _id field => it will go through
+> db.myColl.insert({_id: 2, num: 30})
+
+Variants of generic insert function (Introduced from 3.2 version onwards)
+-----------------------------------
+insertOne
+> db.myColl.insertOne({num: 40})
+
+insertMany
+> db.myColl.insertMany([{num:50}, {num:60}, {num:70}])
+
+Query Operators
+===============
+> db.myColl.find() // like "select *"
+
+> db.myColl.find({num:10}) // returns a collection type
+
+findOne - Variation of find  ==> Used to return the first occurence as per the natural order of the document
+> db.myColl.findOne({num:10})  // returns a single document
+
+Projection
+----------
+db.myColl.find({num:10}, {_id: 0})  // first JSON is for condition JSON (like where), second JSON is for projection
+(OR)
+db.myColl.find({num:10}, {_id: false})
+
+JavaScript functionality in Mongo Shell
+---------------------------------------
+Generating a collection for demonstration of operators
+> for(var i=1; i<=15; i++) db.numbers.insert({x:i, y: Math.floor((Math.random() * 100) + 1)})
+
+> db.numbers.find()
+
+> db.numbers.find({}, {_id: 0})  // Hiding _id field
+
+> db.numbers.find({}, {_id: 0, y: 1}) // Project only y field values
+
+> db.numbers.find({x:10}, {_id: 0, y: 1}) // Project y field values for a condition
+
+> db.numbers.find({x: {$gt: 10}}, {_id: 0, x: 1}) // Display all x values where x is greater than 10
+
+> db.numbers.find({y: {$lte: 50}}, {_id: 0, y: 1}) // Display all y values where y is less than or equal to 50
+
+// Range
+> db.numbers.find({x: {$gt: 10, $lt:15}}, {_id: 0, x: 1}) // Display all x values where x is greater than 10 and less than 15
+
+
+// Implicit Logical operator  [ AND ].  Multiple conditions are evaluated with AND.
+> db.numbers.find({x: {$gt: 10}, y: {$lt: 50}}, {_id: 0, x: 1, y: 1}) // Display x and y values where x is greater than 10 AND y is less than 50 
+
+// Explicit AND  [ $and ]
+> db.numbers.find({$and: [{x: {$gt: 10}}, {y: {$lt: 50}}]}, {_id: 0, x: 1, y: 1}) // Display x and y values where x is greater than 10 AND y is less than 50
+
+// Explicit OR (No implicit OR) [ $or ]
+> db.numbers.find({$or: [{x: {$gt: 10}}, {y: {$lt: 50}}]}, {_id: 0, x: 1, y: 1}) // Display x and y values where x is greater than 10 OR y is less than 50
+
+// Not equality operator [ $ne ]
+> db.numbers.find({x: {$ne: 10}}, {_id: 0, x: 1}) // Display all x values where x is Not equal to 10
+
+// Selected values of x  [ $in ]
+> db.numbers.find({x: {$in: [5,10,15]}}, {_id: 0, y: 1}) // Display y values for selected values of x
+
+// Regular expression operators
+> db.names.insert({name: "Ashwin"})
+> db.names.insert({name: "Rahul"})
+> db.names.insert({name: "Raj"})
+> db.names.insert({name: "ram"})
+> db.names.insert({name: "Sachin"})
+> db.names.insert({name: "vinay"})
+
+> db.names.find({}, {_id: 0})
+
+// Case sensitive search  [ Starting with - ^ ]
+> db.names.find({name: {$regex:/^R/}}, {_id: 0})
+
+> db.names.find({name: {$regex:/^r/}}, {_id: 0})
+
+// Case insensitive search
+> db.names.find({name: {$regex:/^R/i}}, {_id: 0})
+
+// Ending with - $
+> db.names.find({name: {$regex:/n$/i}}, {_id: 0})
+
+
+UPDATE operations
+=================
+Wrong way of doing update - This changes the entire document, it is not a field level update
+> db.numbers.find({x:10})   // Show the document where x = 10 and note down _id field
+> db.numbers.update({x:10}, {y:75})
+> db.numbers.find({x:10})  // will not return any document
+> db.numbers.find({y:75})  // Shows the _id field which is same as above
+
+Performing the standard way of update - at a field level  [ $set ]
+> db.numbers.update({x:10}, {$set: {y:70})
+> db.numbers.find({x:10})
+
+> db.numbers.update({x:10}, {$set: {z:100}) // Adds a new field to this document alone whereas other documents will not have z
+> db.numbers.find({x:10})
+> db.numbers.find()  // Only one document will have field z  -- This is not possible in RDBMS. Need to alter the table
+
+Check if z exists in a document
+> db.numbers.find({z:{$exists:true}})
+
+To remove a field from document in the update operation  [ $unset ]
+> db.numbers.update({x:10}, {$unset: {z:""}})  // Don't use {$set: {z:null} for unsetting, null will become a value in MongoDB.
+> db.numbers.find({z:{$exists:true}})  // Verify removal
+> db.numbers.find({x:10})              // Verify removal - another way
+
+Setting a field to null does not remove the field
+> db.numbers.update({x:10}, {$set: {z:100})
+> db.numbers.update({x:10}, {$set: {z:null})
+> db.numbers.find({x:10})  // Will display the document with z having a value null
+> db.numbers.find({z:{$exists:true}})  // It shows the field z exists.
+
+> db.numbers.update({x:10}, {$unset: {z:""}})  // This will actually remove the field "z".
+
+Increment or decrement a field value
+------------------------------------
+> db.numbers.update({x:10}, {$inc: {y:10})  // Increments the value of y by 10
+> db.find({x:10})
+
+> db.numbers.update({x:10}, {$inc: {y:-10})  // Decrements the value of y by 10
+> db.find({x:10})
+
+Multiply
+--------
+> db.numbers.update({x:10}, {$mul: {y:2})  // Multiplies the value of y by 2
+> db.find({x:10})
+
+==> Multiply can take fractional value or decimal value
+==> No explicit operator for division
+> db.numbers.update({x:10}, {$mul: {y:0.5})  // Multiplies the value of y by 0.5 (i.e divides by 2)
+> db.find({x:10})
+
+Max
+---
+> db.numbers.update({x:10}, {$max: {y:100})  
+> db.find({x:10})
+
+> db.numbers.update({x:10}, {$max: {y:150})
+> db.find({x:10})
+
+Min
+---
+> db.numbers.update({x:10}, {$min: {y:20})  
+> db.find({x:10})
+
+> db.numbers.update({x:10}, {$min: {y:200})
+> db.find({x:10})
+
+Mutiple Updates
+---------------
+> db.numbers.insert({x:10, y: 40})
+> db.numbers.insert({x:10, y: 30})
+> db.numbers.insert({x:10, y: 20})
+
+> db.numbers.find({x:10}, {_id:0})
+
+> db.numbers.update({x:10}, {$set: {y:55}})  // Default behaviour of MongoDB update is to update the first matching document
+> db.numbers.find({x:10}, {_id:0})
+
+> db.numbers.update({x:10}, {$set: {y:55}}, {multi:true})  // Will update all documents matching the condition
+> db.numbers.find({x:10}, {_id:0})
+
+Variants of generic update methods (Introduced from 3.2 version onwards)
+----------------------------------
+> db.numbers.updateOne({x:10}, {$set: {y:105}})  // Updates first matching document
+
+> db.numbers.updateMany({x:10}, {$set: {y:110}})  // Updates all documents matching condition
+
+Polymorphic behaviour of update - upsert
+----------------------------------------
+> db.numbers.find({x:16}) // Assume exists
+> db.numbers.find({x:17}) // Assume does not exist
+
+> db.numbers.update({x:16}, {$set: {y:75}}, {upsert: true}) // Update
+> db.numbers.find({x:16})
+
+> db.numbers.update({x:17}, {$set: {y:75}}, {upsert: true}) // Insert
+> db.numbers.find({x:17})
+
+Update operators using operations on specific array type data
+-------------------------------------------------------------
+These operators are exclusively used with array types
+
+> db.arrays.insert({x:1, y:[1,2,3,4,5]})
+
+> db.arrays.update({x:1}, {$push: {y:6}}) // Adds a value to array at the end
+> db.arrays.find({}, {_id:0})
+
+> db.arrays.update({x:1}, {$pop: {y:1}}) // Pop a value from the end of array
+> db.arrays.find({}, {_id:0})
+
+> db.arrays.update({x:1}, {$pop: {y:-1}}) // Pop a value from the beginning of array
+> db.arrays.find({}, {_id:0})
+
+> db.arrays.update({x:1}, {$push: {y:{$each:[6,7,8,9,10]}}}) // Adds multiple values to array at the end
+
+> db.arrays.update({x:1}, {$pull: {y:6}}) // Removes all occurences of 6 from the array
+
+> db.arrays.update({x:1}, {$pullAll: {y:[7,8,9,10]}) // Removes all occurences of 7,8,9 and 10 from the array
+
+// Duplicates can be added through push
+> db.arrays.update({x:1}, {$push: {y:6}}) 
+> db.arrays.update({x:1}, {$push: {y:6}})  // Duplicate 6 is added
+
+> db.arrays.update({x:1}, {$addToSet: {y:6}})  // Will not add 6 [ if 6 exists in the array ]
+> db.arrays.update({x:1}, {$addToSet: {y:7}})  // Will add 7 [ if 7 does not exist in the array ]
+
+> db.arrays.update({x:1}, {$addToSet:: {y:{$each:[6,7,8,9,10]}}}) // Adds only unique values
+
+// Adding at the beginning of the array
+> db.arrays.update({x:1}, {$push: {y:{$each:[1], $position: 0}}}) // Adds a value to beginning of the array
+
+// Update which REPLACES the value in the array
+> db.arrays.update({y:7}, {$set:{"y.$":75}}) // Replaces 7 in the array to 75 - changes the first occurence
+> db.arrays.find({}, {_id:0})
+
+// Projecting a value from the array
+> db.arrays.find({y:75}, {"y.$":1})
+
+
+DELETE operations
+=================
+// Generic function is remove
+> db.remove({})  // Warning: This will all documents in the collection. Use with condition specified.
+
+> db.deleteOne({x:10}) // Delete one document
+
+> db.deleteMany({x:10}) // Delete all matching documents
+
+// Update by default will update only one document. Remove by default will remove all matching documents
+
+Indexes
+=======
+// By default, name of the index is field name suffixed with "_" and sort order. You can provide your own index names also.
+// ascending order is 1, descending order is -1
+> db.numbers.createIndex({y:1}) // index on y - ascending sort order
+> db.numbers.createIndex({y:-1}) // index on y - descending sort order
+> db.numbers.getIndexes()
+
+// By default, indexes do not enforce unique constraints
+> db.numbers.find({}, {_id:0, y:1})
+> db.numbers.insert({x:18, y:75})
+
+// To check if the query uses the index or not - Use explain
+> db.numbers.find({x:7}).explain()  // This will explain the usage of index but not execute the query.
+
+// We can execute the query and get the statistics
+> db.numbers.find({x:7}).explain("executionStats")  // This will explain the usage of index and provide execution stats.
+// COLLSCAN = Collection Scan - It means Full Scan.
+// If index was used, it will appear as "IXSCAN" (Index Scan).
+
+// Unique constraints
+> db.numbers.createIndex({x:1}, {unique:true}) // If there are duplicates, unique constraint index creation will not go through
+> db.numbers.getIndexes()
+> db.numbers.find({x:7}).explain("executionStats")
+
+// How to hint to MongoDB to use a particular index
+> db.numbers.find({y: {$gt:75}}, {_id:0, y:1}).hint({y:-1}))
+> db.numbers.find({y: {$gt:75}}, {_id:0, y:1}).hint({y:-1})).explain("executionStats")
+
+Compound Indexes
+----------------
+> db.numbers.createIndex({x:1,y:1}, {name:"myIndex"})
+> db.numbers.getIndexes()
+
+Drop index
+----------
+> db.numbers.dropIndex("myIndex")   // Will drop index "myIndex"
+> db.numbers.dropIndexes()   		// Will drop all indexes except _id
+> db.numbers.dropIndex("_id_")   	// Cannot drop index of _id field
+
+Aggregation Frameworks
+======================
+Importing Employee Collection into the MongoDB database
+-------------------------------------------------------
+mongoimport --db adb --collection employees --file employees.json
+
+// The below aggregation command will first filter all the employees belonging to "Bangalore", then sort by name, skip the first 3 employees, and display 5 employees, projecting only the "name" field.
+> db.employees.aggregate([
+	{ $match: { location: "Bangalore" } },
+	{ $sort: { name: 1} },
+	{ $skip: 3 },
+	{ $limit: 5 },
+	{ $project: {
+		_id: 0,
+		name: 1} },
+  ])
+
+GridFS
+======
+C:\> mongofiles -d mydb put Penguins.jpg
+
+> use mydb
+> show collections
+fs.chunks
+fs.files
+
+> db.fs.files.find().pretty()
+// Displays the metadata on the uploaded file "Penguins.jpg".
+
+> db.fs.chunks.find()
+// Displays the chunks (which will not be human readable as it is binary data
+> db.fs.chunks.count()
+3
+
+C:\> mongofiles -d mydb list
+// List the binary files stored in GridFS.
+
+C:\> mongofiles -d mydb delete Penguins.jpg
+// Deletes the file "Penguins.jpg" stored in GridFS.
