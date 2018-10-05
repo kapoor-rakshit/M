@@ -1,17 +1,21 @@
+
 MongoDB Shell Methods demonstrated during the Webex sessions
 ============================================================
-> use mydb  (creating a new database OR switching from one database to another database)
-> db  --> displays the current Database
-> show dbs  --> displays the list of databases available
+> use mydb  --> CREATE a new database if not exist OR SWITCH to another database
+> db        --> displays the current Database
+> show dbs  --> displays the list of databases available which have atleast one COLLECTION (alias of TABLE)
 
 > db.createCollection("myColl") --> Creates a collection
+> show collections              --> Lists all collections
+
+
 
 Insert functions
 ================
-> db.myColl.insert({num:10}) --> Inserts a document in the collection "myColl"
-> db.myColl.find()  --> Fetches all the documents present in the collection "myColl"
+> db.myColl.insert({num:10}) --> INSERTS a document in the collection "myColl" OR CREATES NEW COLLECTION if not exists of current db
+> db.myColl.find()           --> Fetches all the documents present in the collection "myColl"
 
-Second time inserting 10, but _id field will be different.
+Second time inserting 10 "value" for "key" num, but _id field will be different.
 > db.myColl.insert({num:10}) --> Inserts a document in the collection "myColl"
 
 Explicitly assigning _id field
@@ -21,104 +25,132 @@ Try assigning the same value to _id field => gives duplicate key error index
 > db.myColl.insert({_id: 1, num: 30})
 
 Try assigning different value for _id field => it will go through
-> db.myColl.insert({_id: 2, num: 30})
+> db.myColl.insert({_id: 2, num: 30, gum: "ra"})
 
-Variants of generic insert function (Introduced from 3.2 version onwards)
+Multiple documents (records)
+> db.myColl.insert([{num:50, gum: "ra"}, {num:60}, {num:70, tum: "ta"}])
+
 -----------------------------------
 insertOne
 > db.myColl.insertOne({num: 40})
 
-insertMany
-> db.myColl.insertMany([{num:50}, {num:60}, {num:70}])
+insertMany documents (alias of record)
+> db.myColl.insertMany([{num:50, gum: "ra"}, {num:60}, {num:70, tum: "ta"}])
+
+
 
 Query Operators
 ===============
-> db.myColl.find() // like "select *"
+> db.myColl.find()           --> alias of  "select *"
+(OR)
+> db.myColl.find({})
 
-> db.myColl.find({num:10}) // returns a collection type
+> db.myColl.find({num:10})   --> returns a document , alias of  "where" num = 10 of document
 
-findOne - Variation of find  ==> Used to return the first occurence as per the natural order of the document
-> db.myColl.findOne({num:10})  // returns a single document
+findOne - Variation of find  --> Used to return the first occurence as per the natural order of the document
+> db.myColl.findOne({num:10})    // returns a single document , alias of  "limit" = 1
 
 Projection
 ----------
-db.myColl.find({num:10}, {_id: 0})  // first JSON is for condition JSON (like where), second JSON is for projection
+> db.myColl.find({num:10}, {_id: 0})     // first JSON is for condition (like where), second JSON is for projection (alias of "select")
+                                         // DONOT show _id key for documents
 (OR)
-db.myColl.find({num:10}, {_id: false})
+> db.myColl.find({num:10}, {_id: false})
+
+
+> db.myColl.find({}, {name: 1})          // SHOW only name, _id key(s) in ALL documents as first JSON is {}
+                                        // _id is default key selected unless suppressed, ie _id:0
+(OR) 
+> db.myColl.find({}, {name: true})
+
+
 
 JavaScript functionality in Mongo Shell
----------------------------------------
-Generating a collection for demonstration of operators
-> for(var i=1; i<=15; i++) db.numbers.insert({x:i, y: Math.floor((Math.random() * 100) + 1)})
+========================================
+Generating a collection for demonstration of operators                              // LOOP
+> for(var i=1; i<=15; i++) { db.numbers.insert({x:i, y: Math.floor((Math.random() * 100) + 1)}) }
 
-> db.numbers.find()
+> db.numbers.find({x: {$gt: 10}}, {_id: 0, x: 1})                                   // Display all x values where x is greater than 10
 
-> db.numbers.find({}, {_id: 0})  // Hiding _id field
-
-> db.numbers.find({}, {_id: 0, y: 1}) // Project only y field values
-
-> db.numbers.find({x:10}, {_id: 0, y: 1}) // Project y field values for a condition
-
-> db.numbers.find({x: {$gt: 10}}, {_id: 0, x: 1}) // Display all x values where x is greater than 10
-
-> db.numbers.find({y: {$lte: 50}}, {_id: 0, y: 1}) // Display all y values where y is less than or equal to 50
+> db.numbers.find({y: {$lte: 50}}, {_id: 0, y: 1})                                 // Display all y values where y is less than or equal to 50
 
 // Range
-> db.numbers.find({x: {$gt: 10, $lt:15}}, {_id: 0, x: 1}) // Display all x values where x is greater than 10 and less than 15
+> db.numbers.find({x: {$gt: 10, $lt:15}}, {_id: 0, x: 1})                          // Display all x values where x is greater than 10 and less than 15
 
-
-// Implicit Logical operator  [ AND ].  Multiple conditions are evaluated with AND.
-> db.numbers.find({x: {$gt: 10}, y: {$lt: 50}}, {_id: 0, x: 1, y: 1}) // Display x and y values where x is greater than 10 AND y is less than 50 
+// Implicit Logical operator  [ AND ].  Multiple conditions are evaluated with AND by DEFAULT
+> db.numbers.find({x: {$gt: 10}, y: {$lt: 50}}, {_id: 0, x: 1, y: 1})              // Display x and y values where x is greater than 10 AND y is less than 50 
 
 // Explicit AND  [ $and ]
 > db.numbers.find({$and: [{x: {$gt: 10}}, {y: {$lt: 50}}]}, {_id: 0, x: 1, y: 1}) // Display x and y values where x is greater than 10 AND y is less than 50
 
-// Explicit OR (No implicit OR) [ $or ]
+// Explicit OR (No implicit OR by DEFAULT) [ $or ]
 > db.numbers.find({$or: [{x: {$gt: 10}}, {y: {$lt: 50}}]}, {_id: 0, x: 1, y: 1}) // Display x and y values where x is greater than 10 OR y is less than 50
 
 // Not equality operator [ $ne ]
-> db.numbers.find({x: {$ne: 10}}, {_id: 0, x: 1}) // Display all x values where x is Not equal to 10
+> db.numbers.find({x: {$ne: 10}}, {_id: 0, x: 1})                               // Display all x values where x is Not equal to 10
 
 // Selected values of x  [ $in ]
-> db.numbers.find({x: {$in: [5,10,15]}}, {_id: 0, y: 1}) // Display y values for selected values of x
+> db.numbers.find({x: {$in: [5,10,15]}}, {_id: 0, y: 1})                       // Display y values for selected values of x
 
-// Regular expression operators
-> db.names.insert({name: "Ashwin"})
-> db.names.insert({name: "Rahul"})
-> db.names.insert({name: "Raj"})
-> db.names.insert({name: "ram"})
-> db.names.insert({name: "Sachin"})
-> db.names.insert({name: "vinay"})
 
-> db.names.find({}, {_id: 0})
 
-// Case sensitive search  [ Starting with - ^ ]
+REGEX SEARCH
+=============
+// WRITE REGEX PATTERN within (forward slashes)  ie  /regex_pattern/
+
+// Case sensitive search  
+                          [ Starting with - ^ ]
 > db.names.find({name: {$regex:/^R/}}, {_id: 0})
-
 > db.names.find({name: {$regex:/^r/}}, {_id: 0})
 
-// Case insensitive search
+// Case insensitive search 
+                         --> use  /regex_pattern/i
 > db.names.find({name: {$regex:/^R/i}}, {_id: 0})
 
-// Ending with - $
+//                        [ Ending with - $ ]
 > db.names.find({name: {$regex:/n$/i}}, {_id: 0})
+
 
 
 UPDATE operations
 =================
-Wrong way of doing update - This changes the entire document, it is not a field level update
-> db.numbers.find({x:10})   // Show the document where x = 10 and note down _id field
+WRONG way of doing update - This changes the entire document, it is not a field level update
+> db.numbers.find({x:10})          // Show the document where x = 10 and note down _id field
 > db.numbers.update({x:10}, {y:75})
-> db.numbers.find({x:10})  // will not return any document
-> db.numbers.find({y:75})  // Shows the _id field which is same as above
+> db.numbers.find({x:10})          // will not return any document
+> db.numbers.find({y:75})          // Shows the _id field which is same as above
 
-Performing the standard way of update - at a field level  [ $set ]
-> db.numbers.update({x:10}, {$set: {y:70})
-> db.numbers.find({x:10})
 
-> db.numbers.update({x:10}, {$set: {z:100}) // Adds a new field to this document alone whereas other documents will not have z
-> db.numbers.find({x:10})
-> db.numbers.find()  // Only one document will have field z  -- This is not possible in RDBMS. Need to alter the table
+Performing the STANDARD way of update - at a field level  [ $set ]
+> db.numbers.update({x:10}, {$set: {y:70})    // UPDATE or ADD new field if not exists to match
+
+> db.numbers.update({x:10}, {$set: {z:100})   // ADDS a new field to this document alone whereas other documents will not have z
+
+
+Mutiple Updates
+---------------
+> db.numbers.update({x:10}, {$set: {y:55}})                 // Default behaviour of MongoDB update is to update the first matching document
+
+> db.numbers.update({x:10}, {$set: {y:55}}, {multi:true})  // Will update all documents matching the condition
+
+
+Variants of generic update methods (Introduced from 3.2 version onwards)
+----------------------------------
+> db.numbers.updateOne({x:10}, {$set: {y:105}})   // Updates first matching document
+
+> db.numbers.updateMany({x:10}, {$set: {y:110}})  // Updates all documents matching condition
+
+
+Polymorphic behaviour of update - UPSERT
+----------------------------------------
+> db.numbers.find({x:16}) // Assume exists
+> db.numbers.find({x:17}) // Assume does not exist
+
+> db.numbers.update({x:16}, {$set: {y:75}}, {upsert: true})               // Update ALL documents where x:16 as match found
+
+> db.numbers.update({x:17}, {$set: {y:75}}, {multi: true, upsert: true})  // Insert x:17 document as no match found for it
+
+
 
 Check if z exists in a document
 > db.numbers.find({z:{$exists:true}})
@@ -170,36 +202,7 @@ Min
 > db.numbers.update({x:10}, {$min: {y:200})
 > db.find({x:10})
 
-Mutiple Updates
----------------
-> db.numbers.insert({x:10, y: 40})
-> db.numbers.insert({x:10, y: 30})
-> db.numbers.insert({x:10, y: 20})
 
-> db.numbers.find({x:10}, {_id:0})
-
-> db.numbers.update({x:10}, {$set: {y:55}})  // Default behaviour of MongoDB update is to update the first matching document
-> db.numbers.find({x:10}, {_id:0})
-
-> db.numbers.update({x:10}, {$set: {y:55}}, {multi:true})  // Will update all documents matching the condition
-> db.numbers.find({x:10}, {_id:0})
-
-Variants of generic update methods (Introduced from 3.2 version onwards)
-----------------------------------
-> db.numbers.updateOne({x:10}, {$set: {y:105}})  // Updates first matching document
-
-> db.numbers.updateMany({x:10}, {$set: {y:110}})  // Updates all documents matching condition
-
-Polymorphic behaviour of update - upsert
-----------------------------------------
-> db.numbers.find({x:16}) // Assume exists
-> db.numbers.find({x:17}) // Assume does not exist
-
-> db.numbers.update({x:16}, {$set: {y:75}}, {upsert: true}) // Update
-> db.numbers.find({x:16})
-
-> db.numbers.update({x:17}, {$set: {y:75}}, {upsert: true}) // Insert
-> db.numbers.find({x:17})
 
 Update operators using operations on specific array type data
 -------------------------------------------------------------
@@ -244,6 +247,8 @@ These operators are exclusively used with array types
 
 DELETE operations
 =================
+db.myColl.drop()               // DROP collection
+
 // Generic function is remove
 > db.remove({})  // Warning: This will all documents in the collection. Use with condition specified.
 

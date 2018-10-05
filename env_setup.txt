@@ -3,3 +3,16 @@ For setup refer   "SetupInstructions.docx"
 
 
 
+Why MongoDB ?
+NoSQL architecture is followed by MnogoDB
+
+
+
+change port using  ,  --port 5000    arg while running SHELL and SERVER
+  . mongod --dbpath data/db --port 5000                                // START server
+  . mongo --port 5000                                                  // START shell
+
+
+
+For SHELL methods refer   "MongoDB_ShellMethods.txt"
+
