@@ -12,7 +12,7 @@ MongoDB Shell Methods demonstrated during the Webex sessions
 
 Insert functions
 ================
-> db.myColl.insert({num:10}) --> INSERTS a document in the collection "myColl" OR CREATES NEW COLLECTION if not exists of current db
+> db.myColl.insert({num:10}) --> INSERTS a document in the collection "myColl" OR CREATES NEW COLLECTION if not exists in current db
 > db.myColl.find()           --> Fetches all the documents present in the collection "myColl"
 
 Second time inserting 10 "value" for "key" num, but _id field will be different.
@@ -27,7 +27,7 @@ Try assigning the same value to _id field => gives duplicate key error index
 Try assigning different value for _id field => it will go through
 > db.myColl.insert({_id: 2, num: 30, gum: "ra"})
 
-Multiple documents (records)
+Multiple documents (records) , within []
 > db.myColl.insert([{num:50, gum: "ra"}, {num:60}, {num:70, tum: "ta"}])
 
 -----------------------------------
@@ -53,13 +53,13 @@ findOne - Variation of find  --> Used to return the first occurence as per the n
 Projection
 ----------
 > db.myColl.find({num:10}, {_id: 0})     // first JSON is for condition (like where), second JSON is for projection (alias of "select")
-                                         // DONOT show _id key for documents
+                                         // eg:- here DONOT show _id key for documents
 (OR)
 > db.myColl.find({num:10}, {_id: false})
 
 
 > db.myColl.find({}, {name: 1})          // SHOW only name, _id key(s) in ALL documents as first JSON is {}
-                                        // _id is default key selected unless suppressed, ie _id:0
+                                        // _id is default key selected unless suppressed explicitly, ie _id:0
 (OR) 
 > db.myColl.find({}, {name: true})
 
@@ -103,8 +103,8 @@ REGEX SEARCH
 > db.names.find({name: {$regex:/^R/}}, {_id: 0})
 > db.names.find({name: {$regex:/^r/}}, {_id: 0})
 
-// Case insensitive search 
-                         --> use  /regex_pattern/i
+// Case insensitive search --> use  /regex_pattern/i
+
 > db.names.find({name: {$regex:/^R/i}}, {_id: 0})
 
 //                        [ Ending with - $ ]
@@ -131,6 +131,7 @@ Mutiple Updates
 ---------------
 > db.numbers.update({x:10}, {$set: {y:55}})                 // Default behaviour of MongoDB update is to update the first matching document
 
+// use {multi: true} as arg to update
 > db.numbers.update({x:10}, {$set: {y:55}}, {multi:true})  // Will update all documents matching the condition
 
 
@@ -152,55 +153,56 @@ Polymorphic behaviour of update - UPSERT
 
 
 
-Check if z exists in a document
-> db.numbers.find({z:{$exists:true}})
+Check if a field exists in a document
+--------------------------------------
+> db.numbers.find({z: {$exists: true}})           // returns all documents with z field
+
+> db.numbers.find({z: {$exists: false}})          // returns all documents without z field
 
 To remove a field from document in the update operation  [ $unset ]
+---------------------------------------------------------------------
 > db.numbers.update({x:10}, {$unset: {z:""}})  // Don't use {$set: {z:null} for unsetting, null will become a value in MongoDB.
-> db.numbers.find({z:{$exists:true}})  // Verify removal
-> db.numbers.find({x:10})              // Verify removal - another way
+> db.numbers.find({z:{$exists:true}})          // Verify removal
+> db.numbers.find({x:10})                      // Verify removal - another way
 
 Setting a field to null does not remove the field
 > db.numbers.update({x:10}, {$set: {z:100})
 > db.numbers.update({x:10}, {$set: {z:null})
-> db.numbers.find({x:10})  // Will display the document with z having a value null
-> db.numbers.find({z:{$exists:true}})  // It shows the field z exists.
+> db.numbers.find({x:10})                      // Will display the document with z having a value null
+> db.numbers.find({z:{$exists:true}})          // It shows the field z exists.
 
-> db.numbers.update({x:10}, {$unset: {z:""}})  // This will actually remove the field "z".
+
 
 Increment or decrement a field value
 ------------------------------------
-> db.numbers.update({x:10}, {$inc: {y:10})  // Increments the value of y by 10
-> db.find({x:10})
+> db.numbers.update({x:10}, {$inc: {y:30}}, {multi: true})   // Increments the value of y by 30 for ALL where x is 10
 
-> db.numbers.update({x:10}, {$inc: {y:-10})  // Decrements the value of y by 10
-> db.find({x:10})
+> db.numbers.update({x:10}, {$inc: {y:-30}})                 // Decrements the value of y by 30 for first document where x is 10
+
+
 
 Multiply
 --------
-> db.numbers.update({x:10}, {$mul: {y:2})  // Multiplies the value of y by 2
-> db.find({x:10})
+> db.numbers.update({x:10}, {$mul: {y:2}})                   // Multiplies the value of y by 2
 
-==> Multiply can take fractional value or decimal value
-==> No explicit operator for division
-> db.numbers.update({x:10}, {$mul: {y:0.5})  // Multiplies the value of y by 0.5 (i.e divides by 2)
-> db.find({x:10})
+// Multiply can take fractional value or decimal value
+// No explicit operator for division
+> db.numbers.update({x:10}, {$mul: {y:0.5}})                 // Multiplies the value of y by 0.5 (i.e divides by 2)
+
+
 
 Max
 ---
-> db.numbers.update({x:10}, {$max: {y:100})  
-> db.find({x:10})
+> db.numbers.update({x:10}, {$max: {y:100}})                 // check if DB value of y or this value (100) is max and assign
 
-> db.numbers.update({x:10}, {$max: {y:150})
-> db.find({x:10})
+> db.numbers.update({x:10}, {$max: {y:150}}, {multi: true})
+
 
 Min
 ---
-> db.numbers.update({x:10}, {$min: {y:20})  
-> db.find({x:10})
+> db.numbers.update({x:10}, {$min: {y:20}})                 // check if DB value of y or this value (20) is min and assign
 
-> db.numbers.update({x:10}, {$min: {y:200})
-> db.find({x:10})
+> db.numbers.update({x:10}, {$min: {y:200}})
 
 
 
@@ -210,20 +212,18 @@ These operators are exclusively used with array types
 
 > db.arrays.insert({x:1, y:[1,2,3,4,5]})
 
-> db.arrays.update({x:1}, {$push: {y:6}}) // Adds a value to array at the end
-> db.arrays.find({}, {_id:0})
+> db.arrays.update({x:1}, {$push: {y:6}})                  // Adds a value to array at the end
 
-> db.arrays.update({x:1}, {$pop: {y:1}}) // Pop a value from the end of array
-> db.arrays.find({}, {_id:0})
+> db.arrays.update({x:1}, {$pop: {y:1}})                   // Pop a value from the end of array , (accepts only 1 or -1)
 
-> db.arrays.update({x:1}, {$pop: {y:-1}}) // Pop a value from the beginning of array
-> db.arrays.find({}, {_id:0})
+> db.arrays.update({x:1}, {$pop: {y:-1}})                  // Pop a value from the beginning of array , (accepts only 1 or -1)
 
-> db.arrays.update({x:1}, {$push: {y:{$each:[6,7,8,9,10]}}}) // Adds multiple values to array at the end
+> db.arrays.update({x:1}, {$push: {y:{$each:[6,7,8,9,10]}}})  // Adds multiple values to array at the end
 
-> db.arrays.update({x:1}, {$pull: {y:6}}) // Removes all occurences of 6 from the array
+> db.arrays.update({x:1}, {$pull: {y:6}})                     // Removes all occurences of 6 from the array
 
-> db.arrays.update({x:1}, {$pullAll: {y:[7,8,9,10]}) // Removes all occurences of 7,8,9 and 10 from the array
+> db.arrays.update({x:1}, {$pullAll: {y:[7,8,9,10]}})         // Removes all occurences of 7,8,9,10 from the array
+
 
 // Duplicates can be added through push
 > db.arrays.update({x:1}, {$push: {y:6}}) 

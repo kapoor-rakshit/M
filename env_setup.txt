@@ -16,3 +16,15 @@ change port using  ,  --port 5000    arg while running SHELL and SERVER
 
 For SHELL methods refer   "MongoDB_ShellMethods.txt"
 
+
+
+CAP THEOREM
+=============
+WRITE operation can be in PRIMARY DB only
+READ operation can be from any (S ECONDARY(s), PRIMARY)
+    - this provides HIGH AVAILABILITY as we have cluster (PRIMARY + SECONDARY) of DATABASES
+
+    - provides EVENTUAL CONSISTENCY
+
+    - provides PARTITION (SHARDING) TOLERANCE
+
