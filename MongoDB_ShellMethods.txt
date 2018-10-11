@@ -52,6 +52,11 @@ findOne - Variation of find  --> Used to return the first occurence as per the n
 
 Projection
 ----------
+// NOTE : "true"  specifies that only this field to be shown.
+        : "false" specifies that except this all to be shown.
+        : So MIX of "true" and "false" over fields will throw ERROR.
+        : however "_id" field is an EXCEPTION to above.
+
 > db.myColl.find({num:10}, {_id: 0})     // first JSON is for condition (like where), second JSON is for projection (alias of "select")
                                          // eg:- here DONOT show _id key for documents
 (OR)
@@ -114,7 +119,7 @@ REGEX SEARCH
 
 UPDATE operations
 =================
-WRONG way of doing update - This changes the entire document, it is not a field level update
+WRONG way of doing update - This CHANGES the ENTIRE document, it is not a field level update
 > db.numbers.find({x:10})          // Show the document where x = 10 and note down _id field
 > db.numbers.update({x:10}, {y:75})
 > db.numbers.find({x:10})          // will not return any document
@@ -159,6 +164,7 @@ Check if a field exists in a document
 
 > db.numbers.find({z: {$exists: false}})          // returns all documents without z field
 
+
 To remove a field from document in the update operation  [ $unset ]
 ---------------------------------------------------------------------
 > db.numbers.update({x:10}, {$unset: {z:""}})  // Don't use {$set: {z:null} for unsetting, null will become a value in MongoDB.
@@ -186,7 +192,7 @@ Multiply
 > db.numbers.update({x:10}, {$mul: {y:2}})                   // Multiplies the value of y by 2
 
 // Multiply can take fractional value or decimal value
-// No explicit operator for division
+// As NO explicit operator for division
 > db.numbers.update({x:10}, {$mul: {y:0.5}})                 // Multiplies the value of y by 0.5 (i.e divides by 2)
 
 
@@ -206,7 +212,7 @@ Min
 
 
 
-Update operators using operations on specific array type data
+Update operators using operations on specific ARRAY type data
 -------------------------------------------------------------
 These operators are exclusively used with array types
 
@@ -214,89 +220,119 @@ These operators are exclusively used with array types
 
 > db.arrays.update({x:1}, {$push: {y:6}})                  // Adds a value to array at the end
 
+                                                           // Add value to $position specified of the array
+                                                           // NOTE : use of $each , even for a single value
+> db.emp.update({x: {$exists: true}}, {$push: {x: {$each: ["A"], $position: 1}}} ,{multi: true})
+                                                
 > db.arrays.update({x:1}, {$pop: {y:1}})                   // Pop a value from the end of array , (accepts only 1 or -1)
 
 > db.arrays.update({x:1}, {$pop: {y:-1}})                  // Pop a value from the beginning of array , (accepts only 1 or -1)
 
 > db.arrays.update({x:1}, {$push: {y:{$each:[6,7,8,9,10]}}})  // Adds multiple values to array at the end
 
-> db.arrays.update({x:1}, {$pull: {y:6}})                     // Removes all occurences of 6 from the array
+> db.arrays.update({y:1}, {$pull: {y:6}}, {multi: true})      // Removes all occurences of 6 from all array which have 1
 
-> db.arrays.update({x:1}, {$pullAll: {y:[7,8,9,10]}})         // Removes all occurences of 7,8,9,10 from the array
+> db.arrays.update({y:1}, {$pullAll: {y:[7,8,9,10]}})         // Removes all occurences of 7,8,9,10 from the array which have 1
 
 
-// Duplicates can be added through push
+PREVENT DUPLICATE vals -- addToSet
+-----------------------------------
 > db.arrays.update({x:1}, {$push: {y:6}}) 
-> db.arrays.update({x:1}, {$push: {y:6}})  // Duplicate 6 is added
+> db.arrays.update({x:1}, {$push: {y:6}})                          // Duplicate 6 is added
 
-> db.arrays.update({x:1}, {$addToSet: {y:6}})  // Will not add 6 [ if 6 exists in the array ]
-> db.arrays.update({x:1}, {$addToSet: {y:7}})  // Will add 7 [ if 7 does not exist in the array ]
+> db.arrays.update({x:1}, {$addToSet: {y:6}})                      // Will not add 6 [ if 6 exists in the array ]
+> db.arrays.update({x:1}, {$addToSet: {y:7}})                      // Will add 7     [ if 7 does not exist in the array ]
 
-> db.arrays.update({x:1}, {$addToSet:: {y:{$each:[6,7,8,9,10]}}}) // Adds only unique values
+> db.arrays.update({x:1}, {$addToSet: {y:{$each:[6,7,8,9,10]}}})   // Adds only unique values, which are not already in array
 
-// Adding at the beginning of the array
-> db.arrays.update({x:1}, {$push: {y:{$each:[1], $position: 0}}}) // Adds a value to beginning of the array
 
-// Update which REPLACES the value in the array
-> db.arrays.update({y:7}, {$set:{"y.$":75}}) // Replaces 7 in the array to 75 - changes the first occurence
-> db.arrays.find({}, {_id:0})
+REPLACE the value(s) in the array
+---------------------------------
+> db.arrays.update({y:7}, {$set:{"y.$":75}})                 // ".$" : Replaces 7 in the array to 75 - change only first occurrence
+                                                             // NOTE : USE of POSITIONAL OPERATOR $ , makes use of val from query
 
-// Projecting a value from the array
-> db.arrays.find({y:75}, {"y.$":1})
+> db.emp.update({_id:7}, {$set: {"mark.$[]": 16}})           // ".$[]" : Replaces ALL values in the array to 16
+
+                                                             // ".$[<identifier>]" : Replaces ALL 8 in array with 9025
+                                                             // NOTE : <identifier> must begin with a lowercase letter and contain only alphanumeric character
+                                                                     : use of arrayFilters with <identifier>
+> db.emp.update({_id:7}, {$set: {"mark.$[element]": 9025}}, {arrayFilters: [{element: 8}]})
+
+
+Projecting a value from the array
+----------------------------------
+> db.arrays.find({y:75}, {"y.$":1})                          // Displays 75 from all documents with y having 75 value
+
 
 
 DELETE operations
 =================
-db.myColl.drop()               // DROP collection
+> db.dropDatabase()                  // DROP current DATABASE
 
-// Generic function is remove
-> db.remove({})  // Warning: This will all documents in the collection. Use with condition specified.
+> db.myColl.drop()                   // DROP collection
 
-> db.deleteOne({x:10}) // Delete one document
+> db.mycoll.remove({})               //  WARNING: {} : This will delete all documents in the collection
 
-> db.deleteMany({x:10}) // Delete all matching documents
+> db.mycoll.remove({x:{$exists:true}})   // Use with condition specified.
+                                         // UPDATE by default will update only one document. REMOVE by default will remove all matching documents
 
-// Update by default will update only one document. Remove by default will remove all matching documents
+> db.mycoll.deleteOne({x:10})        // Delete one document
+
+> db.mycoll.deleteMany({x:10})       // Delete all matching documents
+
+
 
 Indexes
-=======
-// By default, name of the index is field name suffixed with "_" and sort order. You can provide your own index names also.
+=========
+// INDEX provides faster retrieval of data by DB by making internal SORTED collections
+// By default, name of the index is field name ie "_id" and sort order. You can provide your own index names also.
 // ascending order is 1, descending order is -1
-> db.numbers.createIndex({y:1}) // index on y - ascending sort order
-> db.numbers.createIndex({y:-1}) // index on y - descending sort order
-> db.numbers.getIndexes()
 
-// By default, indexes do not enforce unique constraints
+> db.numbers.createIndex({y:1})    // index on y - ascending sort order
+> db.numbers.createIndex({y:-1})   // index on y - descending sort order
+> db.numbers.getIndexes()          // return(s) index(s)
+
 > db.numbers.find({}, {_id:0, y:1})
 > db.numbers.insert({x:18, y:75})
 
-// To check if the query uses the index or not - Use explain
-> db.numbers.find({x:7}).explain()  // This will explain the usage of index but not execute the query.
 
-// We can execute the query and get the statistics
-> db.numbers.find({x:7}).explain("executionStats")  // This will explain the usage of index and provide execution stats.
-// COLLSCAN = Collection Scan - It means Full Scan.
-// If index was used, it will appear as "IXSCAN" (Index Scan).
+EXPLAIN
+--------
+> db.numbers.find({x:7}).explain()               // This will explain the usage of index, which index will be used or rejected, but not execute the query.
 
-// Unique constraints
-> db.numbers.createIndex({x:1}, {unique:true}) // If there are duplicates, unique constraint index creation will not go through
+> db.numbers.find({x:7}).explain("executionStats")  // provides execution stats along with usage of index
+                                                    // COLLSCAN = Collection Scan - It means Full Scan.
+                                                    // If index was used, it will appear as "IXSCAN" (Index Scan).
+
+Unique constraints
+-------------------
+// By default, indexes do not enforce unique constraints on fields for which index to be created
+
+> db.numbers.createIndex({x:1}, {unique:true})      // If there are duplicates of field for which index created, unique constraint index creation will FAIL
 > db.numbers.getIndexes()
 > db.numbers.find({x:7}).explain("executionStats")
 
-// How to hint to MongoDB to use a particular index
-> db.numbers.find({y: {$gt:75}}, {_id:0, y:1}).hint({y:-1}))
+
+How to hint (FORCE) to MongoDB to use a particular index
+---------------------------------------------------------
+> db.numbers.find({y: {$gt:75}}, {_id:0, y:1}).hint({y:-1}))    // Use particular INDEX , will give error if that INDEX not exists
+
 > db.numbers.find({y: {$gt:75}}, {_id:0, y:1}).hint({y:-1})).explain("executionStats")
+
 
 Compound Indexes
 ----------------
 > db.numbers.createIndex({x:1,y:1}, {name:"myIndex"})
 > db.numbers.getIndexes()
 
+
 Drop index
 ----------
-> db.numbers.dropIndex("myIndex")   // Will drop index "myIndex"
-> db.numbers.dropIndexes()   		// Will drop all indexes except _id
+> db.numbers.dropIndex("myIndex")       // Will drop index with NAME : "myIndex"
+> db.numbers.dropIndexes()   		// Will drop all indexes except "_id_"
 > db.numbers.dropIndex("_id_")   	// Cannot drop index of _id field
+
+
 
 Aggregation Frameworks
 ======================

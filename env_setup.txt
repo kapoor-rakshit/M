@@ -21,10 +21,41 @@ For SHELL methods refer   "MongoDB_ShellMethods.txt"
 CAP THEOREM
 =============
 WRITE operation can be in PRIMARY DB only
-READ operation can be from any (S ECONDARY(s), PRIMARY)
+READ operation can be from any (SECONDARY(s), PRIMARY)
     - this provides HIGH AVAILABILITY as we have cluster (PRIMARY + SECONDARY) of DATABASES
 
     - provides EVENTUAL CONSISTENCY
 
     - provides PARTITION (SHARDING) TOLERANCE
+
+
+
+ODM
+====
+Object Document Model
+
+
+
+CALLBACK vs PROMISE
+====================
+
+// REFERENCE : https://medium.com/@theflyingmantis/callbacks-vs-promises-and-basics-of-js-80d3d1515e81
+
+What is (req,res) => {} notation in JS ?
+--------------------------------------------
+  . This is ES6 arrow function equivalent to function(req,res) {}.
+
+What is Closure ?
+--------------------
+  . Closure is an inner function that has access to the outer (enclosing) function’s variables.
+  . Callbacks are also closures as the passed function is executed inside other function just as if the callback were defined in the containing function.
+    Closures have access to the containing function’s scope.
+
+Difference between callback and promises ?
+--------------------------------------------
+  . As explained above, promises are cleaner way for running asynchronous tasks to synchronous and 
+    also provide catching mechanism which are not in callbacks.
+    Promises are built over callbacks.
+    Promises are a very mighty abstraction, allow cleaner and better, functional code with less error.
+
 
