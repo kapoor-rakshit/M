@@ -4,7 +4,7 @@ var mongoose = require("mongoose");
                                     // native ES6 promises plugged in
 mongoose.Promise = global.Promise;
 
-mongoose.connect("mongodb://127.0.0.1:27017/manage", {useMongoClient: true});
+mongoose.connect("mongodb://127.0.0.1:27017/menagerie", {useMongoClient: true});
 
 var db = mongoose.connection;
 
