@@ -56,7 +56,24 @@ Difference between callback and promises ?
 --------------------------------------------
   . As explained above, promises are cleaner way for running asynchronous tasks to synchronous and 
     also provide catching mechanism which are not in callbacks.
+    When CALLBACK func not passed , an instance of QUERY is returned.
+    However if CALLBACK passed , QUERY is executed immediately.
     Promises are built over callbacks.
     Promises are a very mighty abstraction, allow cleaner and better, functional code with less error.
+
+
+
+GridFS
+=======
+GridFS is an interface for storing binary data (AUDIO, IMAGE, DOCUMENT..) to mongodb.
+GridFS-Stream is used for connecting to GridFS API of MongoDB , once connected to server using mongoose.
+
+gridfs creates  "fs.files"  and   "fs.chunks"   collections in current db.
+
+fs.files -->  provides details of binary file(s)
+fs.chunks --> provides chunk details of chunks created
+
+** IMPORTANT ** REFER  "MongoDB_ShellMethods.txt"  for more.
+-------------------------------------------------------------
 
 

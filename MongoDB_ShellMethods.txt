@@ -351,25 +351,41 @@ mongoimport --db adb --collection employees --file employees.json
 		name: 1} },
   ])
 
-GridFS
-======
-C:\> mongofiles -d mydb put Penguins.jpg
 
-> use mydb
+
+
+GridFS
+=======
+
+These commands can be run from any dir (provided env variables for MONGO are set)
+------------------------------------------------------------------------------------
+C:\Users\ra20024024> mongofiles -d DBNAME put "FILENAME.png"
+                   // Add binary file to DBNAME
+
+C:\Users\ra20024024> mongofiles -d DBNAME list
+                   // List the binary files stored in GridFS.
+
+C:\Users\ra20024024> mongofiles -d DBNAME delete "FILENAME.png"
+                   // Deletes the file stored in GridFS.
+
+
+These commands are to be run in MONGO SHELL
+----------------------------------------------
 > show collections
-fs.chunks
-fs.files
+// OUTPUT collections created by GRIDfs
+         fs.chunks
+         fs.files
 
 > db.fs.files.find().pretty()
 // Displays the metadata on the uploaded file "Penguins.jpg".
 
+> db.fs.files.count()
+// count of binary files stored in DB
+
 > db.fs.chunks.find()
-// Displays the chunks (which will not be human readable as it is binary data
+// Displays the chunks (which will not be human readable as it is binary data)
+
 > db.fs.chunks.count()
-3
+// count of chunks in DB.
 
-C:\> mongofiles -d mydb list
-// List the binary files stored in GridFS.
 
-C:\> mongofiles -d mydb delete Penguins.jpg
-// Deletes the file "Penguins.jpg" stored in GridFS.
