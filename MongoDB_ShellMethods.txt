@@ -336,21 +336,27 @@ Drop index
 
 Aggregation Frameworks
 ======================
-Importing Employee Collection into the MongoDB database
--------------------------------------------------------
-mongoimport --db adb --collection employees --file employees.json
 
-// The below aggregation command will first filter all the employees belonging to "Bangalore", then sort by name, skip the first 3 employees, and display 5 employees, projecting only the "name" field.
+// The below aggregation command will first filter all the employees belonging to "Bangalore",
+//                                          then sort by name, 
+//                                          skip the first 3 employees, 
+//                                          and display 5 employees, 
+//                                          projecting only the "name" field.
 > db.employees.aggregate([
 	{ $match: { location: "Bangalore" } },
 	{ $sort: { name: 1} },
 	{ $skip: 3 },
 	{ $limit: 5 },
-	{ $project: {
-		_id: 0,
-		name: 1} },
-  ])
+	{ $project: {_id: 0,name: 1}}
+	])
 
+
+
+
+Importing JSON file into MongoDB database
+==========================================
+C:\Users\ra20024024> mongoimport --db DBNAME --collection COLLECTION_NAME --file "FILENAME.json"
+                     // can be run from any dir (provided env variables for MONGO are set)
 
 
 

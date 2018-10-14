@@ -19,7 +19,7 @@ conn.once("open", function(){
 	var gfs = grid(conn.db);
 
 
-	                       /* WRITING to gridfs */
+	             /* WRITING to gridfs */
 
   //   var writestream = gfs.createWriteStream({filename: "rakshit_MONGO.jpg"});   // FILENAME as to store in DB
   //   fs.createReadStream("C:\\Users\\ra20024024\\Desktop\\Rakshit_docs\\rakshit new photo.jpg").pipe(writestream);
@@ -27,13 +27,30 @@ conn.once("open", function(){
   //   writestream.on("close", function(file){
   //   	 console.log(file.filename, "Written to MONGOdb");
 
-  //   	 conn.close(function(){
+  //   	 conn.db.close(function(){
   // 	    console.log("CONNECTION closed");
   //      });
   //   });
 
 
-    					 /* READING from MONGOdb GRIDfs */
+               /* CHECKING on file */
+
+      gfs.exist({filename :"rakshi_MONGO.jpg"}, function(err, found){
+          if(err){
+            console.log(err.code, err.message);
+          }
+          else{
+            found ? console.log("FILE found") : console.log("FILE not FOUND");
+          }
+
+          conn.db.close(function(){
+            console.log("CONNECTION closed");
+          });
+      });
+    
+
+
+    		  /* READING from MONGOdb GRIDfs */
 
     // var fs_write_stream = fs.createWriteStream("rakshit_from_MONGO.jpg");      // FILENAME as to store in MACHINE
     // gfs.createReadStream({filename: "rakshit_MONGO.jpg"}).pipe(fs_write_stream);
@@ -41,22 +58,22 @@ conn.once("open", function(){
     // fs_write_stream.on("close", function(){
     // 	 console.log("Written to MACHINE");
 
-    // 	 conn.close(function(){
+    // 	 conn.db.close(function(){
     // 		console.log("CONNECTION closed");
     // 	  });
     // });
 
 
-    					/* DELETE from MONGO GRIDfs*/
+    		/* DELETE from MONGO GRIDfs*/
 
-    gfs.remove({filename: "rakshit_MONGO.jpg"}, function(err, gridStore){
-    	if(err) console.log(err.code, err.message);
-    	else console.log("FILE deleted");
+    // gfs.remove({filename: "rakshit_MONGO.jpg"}, function(err, gridStore){
+    // 	if(err) console.log(err.code, err.message);
+    // 	else console.log("FILE deleted");
 
-    	conn.close(function(){
-    		console.log("CONNECTION closed");
-    	});
-    });
+    // 	conn.db.close(function(){
+    // 		console.log("CONNECTION closed");
+    // 	});
+    // });
 
 });
 
