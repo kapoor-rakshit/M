@@ -351,6 +351,24 @@ Aggregation Frameworks
 	])
 
 
+// JOIN in MongoDB
+// REFERENCE : https://docs.mongodb.com/manual/reference/operator/aggregation/lookup/
+   //    Performs a left outer join to an unsharded collection in the same database 
+   //    to filter in documents from the “joined” collection for processing
+   //    new array field is added to the input documents by default.
+   //    For a new collection specify $out: "COLLECTION NAME"
+>  db.bookinghistory.aggregate([
+	{ $lookup: 
+		{ from: "buses", 
+		  localField: "routeno", 
+		  foreignField: "routeno", 
+		  as: "routesbooked" 
+		}
+	}, 
+	{ $out: "newcoll_busesBooked"}
+	])	
+
+
 
 
 Importing JSON file into MongoDB database
