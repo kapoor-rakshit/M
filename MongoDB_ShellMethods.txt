@@ -10,6 +10,38 @@ MongoDB Shell Methods demonstrated during the Webex sessions
 
 
 
+Miscellaneous commands / terms
+==============================
+> db.collection.dataSize()                                --> The size in bytes of the collection
+> db.collection.storageSize()                             --> Total amount of storage allocated to collection for document storage
+> db.collection.totalSize()                               --> Total size in bytes of data in collection plus size of every index on collection.
+
+> db.collection.distinct("FIELD")                         --> Return Distinct Values for a "FIELD" in entire "collection"
+> db.collection.distinct("FIELD.SUBFIELD")                --> Return Distinct Values for an Embedded Field in entire collection
+> db.collection.distinct("ArrayField")                    --> Return Distinct Values for an Array Field in entire collection
+> db.collection.distinct("FIELD", { dept: "A" })          --> Query with distinct, to find distinct only amongst documents with dept "A"
+
+> db.collection.QUERY().explain()                         --> Returns information on the query plan
+
+> db.collection.stats()                                   --> Returns statistics about the collection
+
+> $group (aggregation)
+ Groups documents by some specified expression and outputs to the next stage a document for each distinct grouping.
+ The output documents contain an _id field (mandatory) which contains the distinct group by key.
+ The output documents can also contain computed fields that hold the values of some accumulator expression.
+ $group does not order its output documents.
+ 
+> db.collection.renameCollection("NEW NAME")             --> Renames collection to "NEW NAME"
+
+> capped collection
+  A fixed-sized collection that automatically overwrites its oldest entries when it reaches its maximum size.
+
+> map-reduce
+ A data processing and aggregation paradigm consisting of a “map” phase that selects data and
+ a “reduce” phase that transforms the data.
+
+
+
 Insert functions
 ================
 > db.myColl.insert({num:10}) --> INSERTS a document in the collection "myColl" OR CREATES NEW COLLECTION if not exists in current db
@@ -186,9 +218,8 @@ Increment or decrement a field value
 > db.numbers.update({x:10}, {$inc: {y:-30}})                 // Decrements the value of y by 30 for first document where x is 10
 
 
-
-Multiply
---------
+Multiply a field value
+----------------------
 > db.numbers.update({x:10}, {$mul: {y:2}})                   // Multiplies the value of y by 2
 
 // Multiply can take fractional value or decimal value
@@ -196,9 +227,39 @@ Multiply
 > db.numbers.update({x:10}, {$mul: {y:0.5}})                 // Multiplies the value of y by 0.5 (i.e divides by 2)
 
 
+$sum , similarly we have  $multiply , $avg
+------------------------------------------
+Calculates and returns the sum of numeric values.
+$sum ignores non-numeric values.
+$sum is available in the $group and $project stages.
+
+ When used in the $group stage,
+                 --------
+returns the collective sum of all the numeric values
+that result from applying a specified expression to each document in a group of documents that share the same group by key:
+ { $sum: <expression> }
+ eg: $sum: 1             
+expression is 1, it will aggregate a value of one for each document in the group, thus yielding the total number of documents per group.
+
+
+ When used in the $project stage,
+                 ---------
+returns the sum of the specified expression or list of expressions for each document:
+
+one specified expression as its operand:
+if the expression resolves to an array,
+$sum traverses into the array to operate on the numerical elements of the array to return a single value.
+ { $sum: "$FIELDNAME OR $ARRAYNAME" }
+
+a list of specified expressions as its operand:
+if any of the expressions resolves to an array,
+$sum does not traverse into the array but instead treats the array as a non-numerical value.
+ { $sum: [ "$FIELD1", "$FIELD2" ... ]  }
+
+
 
 Max
----
+----
 > db.numbers.update({x:10}, {$max: {y:100}})                 // check if DB value of y or this value (100) is max and assign
 
 > db.numbers.update({x:10}, {$max: {y:150}}, {multi: true})
